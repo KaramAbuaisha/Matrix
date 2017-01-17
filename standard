@@ -1,0 +1,10 @@
+NAMES: (Jin's standard)
+matrix: module name
+
+VARIABLES:
+self.nRows: number of rows
+self.nColumns: number of columns
+self.contents: the list containing the matrix elements
+
+FUNCTIONS/METHODS:
+self.minor(): a certain row and column deleted
