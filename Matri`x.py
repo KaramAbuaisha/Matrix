@@ -43,12 +43,23 @@ class Matrix:
     #Check for recursion stop, return self
     if len(matrix) == 1:
       return matrix[0][0]
-    
+    counter = 1
+    flag = False
+    if matrix[0][0] != 0:
+      flag = True
+    else:
+      for row in matrix[1:]:
+        if matrix[row][0] != 0:
+          temp = matrix[0]
+          matrix[0] = matrix[row]
+          matrix[row] = temp
+          flag = True
+          break
+        else:
+          counter += 1
     #Row reduce current column
-    for row in matrix[1:]:
-      
-      #prevent division by zero
-      if row[0] != 0:
+    if flag == True:
+      for row in matrix[counter:]:
         #create pivot to make first terms 0
         pivot = row[0] / matrix[0][0]
         for col in range(len(row)):
