@@ -1,56 +1,14 @@
 from copy import deepcopy
-class Matrix:
+class SquareMatrix:
   def __init__(self, vals):
     self.vals = vals
+  
+  
+  
+  def minor(self):
+    matrix = deepcopy(self.vals)
     
   def ref(self):
-    matrix = deepcopy(self.vals)
-    length = len(matrix)
-    if length > 1:
-      
-      #check if first entry is 0
-      
-      flag = False
-      if matrix[0][0] != 0:
-        flag = True
-      else:
-        for i in range(1, length):
-          if matrix[i][0] != 0:
-            temp = matrix[i]
-            matrix[i] = matrix[0] 
-            matrix[0] = temp
-            flag = True
-            break
-        
-      if flag == True:
-        div = matrix[0][0]
-        #printing div so you can determine the determinant
-        print (div)
-        for i in range(length):
-          matrix[0][i] = matrix[0][i] / div
-        #make every other row's first entry zero
-        for i in range(1, length):
-          if matrix[i][0] != 0:
-            factor = matrix [i][0]
-            for j in range(length):
-              matrix[i][j] = matrix[i][j] - factor * matrix[0][j]
-      #recursion 
-      sub = Matrix([[matrix[j+1][i+1] for i in range(length-1)] for j in range(length-1)])
-      
-      minor = sub.ref()
-      
-      finalmatrix = [matrix[0]]
-      if type(minor) == float:
-        return [matrix[0], [0, minor]]
-      for i in range(length-1):
-        finalmatrix += [[0] + minor[i]]
-      return finalmatrix
-    else:
-      print (matrix[0][0])
-      return float(1)
-  
-  #ref without setting leading values to 1
-  def ref1(self):
     matrix = deepcopy(self.vals)
     length = len(matrix)
     if length > 1:
@@ -61,31 +19,77 @@ class Matrix:
       if matrix[0][0] != 0:
         flag = True
       else:
-        for i in range(1, length):
-          if flag == False and matrix[i][0] != 0:
-            temp = matrix[i]
-            matrix[i] = matrix[0] 
+        for row in matrix[1:]:
+          if row[0] != 0:
+            temp = row
+            row = matrix[0] 
+            matrix[0] = temp
+            flag = True
+            break
+          else:
+            counter += 1
+        
+      if flag == True:
+        div = matrix[0][0]
+        for i in range(length):
+          matrix[0][i] = matrix[0][i] / div
+        #make every other row's first entry zero
+        for row in matrix[counter:]:
+          if row[0] != 0:
+            factor = row[0]
+            for j in range(length):
+              row[j] = row[j] - factor * matrix[0][j]
+      #recursion 
+      sub = SquareMatrix([[matrix[j+1][i+1] for i in range(length-1)] for j in range(length-1)])
+      
+      minor = sub.ref()
+      
+      finalmatrix = [matrix[0]]
+      if type(minor) == float:
+        return [matrix[0], [0, minor]]
+      for row in minor:
+        finalmatrix += [[0] + row]
+      return finalmatrix
+    else:
+      print (matrix[0][0])
+      return float(1)
+  
+  def uppertriang(self):
+    matrix = deepcopy(self.vals)
+    length = len(matrix)
+    if length > 1:
+      
+      #check if first entry is 0
+      counter = 1
+      flag = False
+      if matrix[0][0] != 0:
+        flag = True
+      else:
+        for row in matrix[1:]:
+          if row[0] != 0:
+            temp = row
+            row = matrix[0] 
             matrix[0] = temp
             flag = True
             break
           else:
             counter += 1
       if flag == True:    
-        for i in range(counter, length):
-          if matrix[i][0] != 0:
-            factor = matrix [i][0] / matrix [0][0]
+        for row in matrix[counter:]:
+          if row[0] != 0:
+            factor = row[0] / matrix[0][0]
             for j in range(length):
-              matrix[i][j] = matrix[i][j] - factor * matrix[0][j]
+              row[j] = row[j] - factor * matrix[0][j]
               
-      sub = Matrix([[matrix[j+1][i+1] for i in range(length-1)] for j in range(length-1)])
+      sub = SquareMatrix([[matrix[j+1][i+1] for i in range(length-1)] for j in range(length-1)])
       
-      minor = sub.ref1()
+      minor = sub.uppertriang()
       
       finalmatrix = [matrix[0]]
       if type(minor) == float:
         return [matrix[0], [0, minor]]
-      for i in range(length-1):
-        finalmatrix += [[0] + minor[i]]
+      for row in minor:
+        finalmatrix += [[0] + row]
       return finalmatrix
     else:
       return (float(matrix[0][0]))
@@ -103,20 +107,36 @@ class Matrix:
     
   #very inefficient since after ref its technically already in rref (you have the rank)
   def rref(self):
-    uppertriang = Matrix(self.vals).ref()
+    uppertriang = SquareMatrix(self.vals).ref()
     print ("kk")
-    lowertriang = Matrix(uppertriang).transpose()
+    lowertriang = SquareMatrix(uppertriang).transpose()
     print ("k")
-    finalmatrix = Matrix(lowertriang).ref()
+    finalmatrix = SquareMatrix(lowertriang).ref()
     return finalmatrix
   
   def det(self):
-    matrix = deepcopy(self.vals)
-    uppertriang = Matrix(matrix).ref1()
+    matrix = SquareMatrix(deepcopy(self.vals))
+    uppertriang = matrix.uppertriang()
     det = 1
-    for i in range(len(matrix)):
+    for i in range(len(uppertriang)):
       det = det * uppertriang[i][i]
     return det
   
   def independent(self):
-    matrix = deepcopy(self.vals)
+    matrix = SquareMatrix(deepcopy(self.vals))
+    if matrix.det() == 0:
+      print ("Matrix is not independent")
+      return 0
+    else:
+      print ("Matrix is dependent")
+      return 1
+      
+  def rank(self):
+    matrix = SquareMatrix(deepcopy(self.vals))
+    uppertriang = matrix.uppertriang()
+    rank = 0
+    for i in range(len(uppertriang)):
+      if uppertriang[i][i] == 0:
+        rank += 1 
+    print ("Size = ", len(uppertriang), "\nRank = ", rank)
+
