@@ -5,7 +5,7 @@ class SquareMatrix:
     self.vals = vals
   
   
-  
+  #incomplete method
   def minor(self):
     matrix = deepcopy(self.vals)
     
