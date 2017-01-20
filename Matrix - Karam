@@ -1,3 +1,4 @@
+#deepcopy is used so as to not alter the matrix
 from copy import deepcopy
 class SquareMatrix:
   def __init__(self, vals):
@@ -8,16 +9,22 @@ class SquareMatrix:
   def minor(self):
     matrix = deepcopy(self.vals)
     
+  """returns the row reduced matrix, but doesn't reduce to reduced row echelon form. values are left in the same columns as leading 1's
+  no real use for this method (next method gives all of the information this method does and then some)
+  but i plan to alter it in the future to use it for solving linear systems"""
   def ref(self):
     matrix = deepcopy(self.vals)
     length = len(matrix)
-    if length > 1:
-      
-      #check if first entry is 0
+    #this condition exists for recursion
+    if length > 1:     
+      #counter is to save time, used when making every row's first entry zero (except the first row), refer to line 40
       counter = 1
       flag = False
+      #check if first entry is 0
       if matrix[0][0] != 0:
         flag = True
+        
+      #if first entry isn't 0, switch the first row with a row that has a non-zero first entry       
       else:
         for row in matrix[1:]:
           if row[0] != 0:
@@ -28,42 +35,58 @@ class SquareMatrix:
             break
           else:
             counter += 1
-        
+            
+      #if flag != True, then all rows already have a first entry of zero        
       if flag == True:
+      
+        #make first entry of first row = one
         div = matrix[0][0]
         for i in range(length):
           matrix[0][i] = matrix[0][i] / div
-        #make every other row's first entry zero
+          
+        #make every other row's first entry zero, we already know all of the rows up to the counter have a first entry of zero
         for row in matrix[counter:]:
           if row[0] != 0:
-            factor = row[0]
             for j in range(length):
-              row[j] = row[j] - factor * matrix[0][j]
-      #recursion 
+              row[j] = row[j] - row[0] * matrix[0][j]
+              
+      #sub is a minor of the matrix, removing first row and column, creating a method to do this soon 
       sub = SquareMatrix([[matrix[j+1][i+1] for i in range(length-1)] for j in range(length-1)])
       
+      #recursion
       minor = sub.ref()
       
       finalmatrix = [matrix[0]]
+      #this is true for the 2x2 matrix (its minor is a single value, has length 1)
       if type(minor) == float:
-        return [matrix[0], [0, minor]]
+        return [matrix[0], [0, 1.0]]
+        
+      #this will return our final matrix (after a few loops - recursion)
       for row in minor:
         finalmatrix += [[0] + row]
       return finalmatrix
-    else:
-      print (matrix[0][0])
+    #if matrix only contains 1 value, it is time to end the cycle of recursion, type float is returned  
+    else:      
       return float(1)
   
+  
+  
+  #this method is used in other methods to determine rank, determinant, and wether or not the matrix is independent 
   def uppertriang(self):
     matrix = deepcopy(self.vals)
     length = len(matrix)
+    #this condition exists for recursion
     if length > 1:
-      
-      #check if first entry is 0
+    
+      #counter is to save time, used when making every row's first entry zero (except the first row), refer to line 40
       counter = 1
       flag = False
+      
+      #check if first entry is 0
       if matrix[0][0] != 0:
         flag = True
+        
+      #if first entry isn't 0, switch the first row with a row that has a non-zero first entry   
       else:
         for row in matrix[1:]:
           if row[0] != 0:
@@ -74,26 +97,38 @@ class SquareMatrix:
             break
           else:
             counter += 1
-      if flag == True:    
+      #if flag != True, then all rows already have a first entry of zero       
+      if flag == True:
+        #make every other row's first entry zero, we already know all of the rows up to the counter have a first entry of zero
         for row in matrix[counter:]:
           if row[0] != 0:
             factor = row[0] / matrix[0][0]
             for j in range(length):
               row[j] = row[j] - factor * matrix[0][j]
               
+      #sub is a minor of the matrix, removing first row and column, creating a method to do this soon         
       sub = SquareMatrix([[matrix[j+1][i+1] for i in range(length-1)] for j in range(length-1)])
       
+      #recursion
       minor = sub.uppertriang()
       
       finalmatrix = [matrix[0]]
+      
+      #this is true for the 2x2 matrix (its minor is a single value, has length 1)
       if type(minor) == float:
         return [matrix[0], [0, minor]]
+        
+      #this will return our final matrix (after a few loops - recursion) 
       for row in minor:
         finalmatrix += [[0] + row]
       return finalmatrix
+    
+    #if matrix only contains 1 value, it is time to end the cycle of recursion, type float is returned
     else:
       return (float(matrix[0][0]))
     
+    
+  #returns the transpose of the matrix  
   def transpose(self):
     matrix = deepcopy(self.vals)
     counter = 0
@@ -105,25 +140,29 @@ class SquareMatrix:
       counter += 1
     return matrix
     
-  #very inefficient since after ref its technically already in rref (you have the rank)
+  """very inefficient and useless method since after ref its technically already in reduced row echelon form, 
+  except for the values in the columns of the leading 1s, which can be removed much more efficiently"""
   def rref(self):
     uppertriang = SquareMatrix(self.vals).ref()
-    print ("kk")
     lowertriang = SquareMatrix(uppertriang).transpose()
-    print ("k")
     finalmatrix = SquareMatrix(lowertriang).ref()
     return finalmatrix
   
+  #returns the determinant of the matrix
   def det(self):
     matrix = SquareMatrix(deepcopy(self.vals))
+    #easy to compute the determinant from an uppertriangular matrix, there are likely much more efficient methods
     uppertriang = matrix.uppertriang()
     det = 1
+    #matrix is uppertriangular, so det is just the product of all of the values along the diagonal of the matrix
     for i in range(len(uppertriang)):
-      det = det * uppertriang[i][i]
+      det *= uppertriang[i][i]
     return det
-  
+    
+  #prints a statement declaring wether or not the matrix is dependent, returns 1 if it is, returns 0 if it isn't
   def independent(self):
     matrix = SquareMatrix(deepcopy(self.vals))
+    #determinant method is used to determine independence 
     if matrix.det() == 0:
       print ("Matrix is not independent")
       return 0
@@ -131,6 +170,7 @@ class SquareMatrix:
       print ("Matrix is dependent")
       return 1
       
+  #prints a statement that gives the size and the rank of the matrix
   def rank(self):
     matrix = SquareMatrix(deepcopy(self.vals))
     uppertriang = matrix.uppertriang()
